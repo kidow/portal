@@ -1,5 +1,10 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import urlMetadata from "url-metadata";
 
 export default function handler(req, res) {
-  res.status(200).json({ name: 'John Doe' })
+  const url = req.query.url;
+  console.log("url", url);
+  urlMetadata("https://kidow.me")
+    .then((metadata) => console.log("metadata", metadata))
+    .catch((err) => console.log(err));
+  res.status(200).json({ name: "John Doe" });
 }
