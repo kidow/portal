@@ -8,6 +8,10 @@
     Pretendard, Roboto, 'Noto Sans KR', 'Segoe UI', 'Malgun Gothic', sans-serif;
 }
 
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 @layer base {
   html,
   body {
