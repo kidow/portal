@@ -22,6 +22,7 @@ interface State {
   isCreating: boolean
   startDate: string
   endDate: string
+  memo: string
 }
 
 const HomePage = () => {
@@ -38,7 +39,8 @@ const HomePage = () => {
       url,
       isCreating,
       startDate,
-      endDate
+      endDate,
+      memo
     },
     setState,
     onChange
@@ -54,7 +56,8 @@ const HomePage = () => {
     url: '',
     isCreating: false,
     startDate: '',
-    endDate: ''
+    endDate: '',
+    memo: ''
   })
 
   const get = async () => {
@@ -71,7 +74,7 @@ const HomePage = () => {
     setState({ isCreating: true })
     const { data, error } = await supabase
       .from<ILink>('links')
-      .insert([{ title, description, image, url, is_private: isPrivate }])
+      .insert([{ title, description, image, url, is_private: isPrivate, memo }])
     if (error) {
       console.error(error)
       setState({ isCreating: false })
@@ -83,7 +86,8 @@ const HomePage = () => {
       image: '',
       url: '',
       isCreating: false,
-      isPrivate: false
+      isPrivate: false,
+      memo: ''
     })
     get()
   }
@@ -155,6 +159,7 @@ const HomePage = () => {
                 type="password"
                 onChange={onChange}
                 onKeyDown={onEnter}
+                autoFocus
                 className="bg-transparent border-b focus:outline-none"
               />
             )}
@@ -207,6 +212,13 @@ const HomePage = () => {
                   <div className="text-sm text-neutral-500 line-clamp-2 md:line-clamp-1">
                     {description}
                   </div>
+                  <input
+                    value={memo}
+                    name="memo"
+                    onChange={onChange}
+                    className="mt-1 text-sm bg-transparent border-b border-neutral-600"
+                    placeholder="메모"
+                  />
                 </div>
                 <Switch
                   checked={isPrivate}
