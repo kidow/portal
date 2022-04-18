@@ -8,6 +8,7 @@ import type { Result } from 'url-metadata'
 import Link from 'next/link'
 import { MinusIcon, PlusIcon, SearchIcon } from '@heroicons/react/outline'
 import { Switch } from 'components'
+import dayjs from 'dayjs'
 
 interface State {
   isLoggedIn: boolean
@@ -244,10 +245,18 @@ const HomePage = () => {
                         {item.title}
                       </a>
                     </Link>
+                    <span className="ml-3 text-xs text-neutral-600">
+                      {dayjs(item.created_at).format(
+                        'YYYY년 MM월 DD일 HH시 mm분 ss초'
+                      )}
+                    </span>
                   </div>
                   <div className="text-sm text-neutral-500 line-clamp-2 md:line-clamp-1">
                     {item.description}
                   </div>
+                  {!!item.memo && (
+                    <div className="text-xs text-neutral-600">{item.memo}</div>
+                  )}
                 </div>
                 {isLoggedIn && (
                   <button onClick={() => remove(item.id)}>

@@ -1,6 +1,7 @@
 import 'styles/globals.css'
 import App from 'next/app'
 import { ErrorInfo } from 'react'
+import 'dayjs/locale/ko'
 
 interface Props {}
 interface State {
