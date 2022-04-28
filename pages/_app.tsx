@@ -2,6 +2,7 @@ import 'styles/globals.css'
 import App from 'next/app'
 import { ErrorInfo } from 'react'
 import 'dayjs/locale/ko'
+import Script from 'next/script'
 
 interface Props {}
 interface State {
@@ -21,7 +22,12 @@ class MyApp extends App<Props, {}, State> {
   render() {
     const {} = this.state
     const { Component, pageProps } = this.props
-    return <Component {...pageProps} />
+    return (
+      <>
+        <Script src="/gtm.js" strategy="afterInteractive" />
+        <Component {...pageProps} />
+      </>
+    )
   }
 }
 
