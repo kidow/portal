@@ -1,20 +1,27 @@
 import { useObjectState } from 'hooks'
 import Head from 'next/head'
 import supabase from 'api'
-import { useEffect } from 'react'
-import type { ClipboardEvent, KeyboardEvent } from 'react'
+import { useEffect, useMemo } from 'react'
+import type { KeyboardEvent } from 'react'
 import isURL from 'validator/lib/isURL'
 import type { Result } from 'url-metadata'
 import Link from 'next/link'
-import { MinusIcon, PlusIcon, SearchIcon } from '@heroicons/react/outline'
+import {
+  MinusIcon,
+  PlusIcon,
+  SearchIcon,
+  XIcon
+} from '@heroicons/react/outline'
 import { Switch } from 'components'
 import dayjs from 'dayjs'
+import Fuse from 'fuse.js'
+import type { NextPage } from 'next'
+import classnames from 'classnames'
 
 interface State {
   isLoggedIn: boolean
   password: string
   list: ILink[]
-  newUrl: string
   isPrivate: boolean
   title: string
   description: string
@@ -24,14 +31,14 @@ interface State {
   startDate: string
   endDate: string
   memo: string
+  search: string
 }
 
-const HomePage = () => {
+const HomePage: NextPage = () => {
   const [
     {
       isLoggedIn,
       password,
-      newUrl,
       list,
       isPrivate,
       title,
@@ -41,14 +48,14 @@ const HomePage = () => {
       isCreating,
       startDate,
       endDate,
-      memo
+      memo,
+      search
     },
     setState,
     onChange
   ] = useObjectState<State>({
     isLoggedIn: false,
     password: '',
-    newUrl: '',
     list: [],
     isPrivate: false,
     title: '',
@@ -58,7 +65,8 @@ const HomePage = () => {
     isCreating: false,
     startDate: '',
     endDate: '',
-    memo: ''
+    memo: '',
+    search: ''
   })
 
   const get = async () => {
@@ -93,19 +101,17 @@ const HomePage = () => {
     get()
   }
 
-  const onPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+  const onPaste = async (e: globalThis.KeyboardEvent) => {
     if (!isLoggedIn) return
-    const text = e.clipboardData.getData('Text').trim()
-    if (!isURL(text)) {
-      alert('URL이 아닙니다.')
-      return
-    }
-    setState({ url: text })
-
-    fetch(`/api/scrap?url=${text}`)
-      .then((res) => res.json())
-      .then((data: Result) => {
-        console.log('data', data)
+    try {
+      if (e.metaKey && e.key === 'v') {
+        const url = await window.navigator.clipboard.readText()
+        if (!isURL(url)) {
+          alert(`URL이 아닙니다. (text: ${url})`)
+          return
+        }
+        const res = await fetch(`/api/scrap?url=${url}`)
+        const data: Result = await res.json()
         setState({
           title: data.title,
           description: data.description,
@@ -114,8 +120,10 @@ const HomePage = () => {
             : data.url + data.image,
           url: data.url
         })
-      })
-      .catch((err) => console.error(err))
+      }
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   const onEnter = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -135,8 +143,22 @@ const HomePage = () => {
     get()
   }
 
+  const searchList: ILink[] = useMemo(() => {
+    if (!search) return list
+    const fuse = new Fuse(list, { keys: ['title', 'description'] })
+    return fuse
+      .search(search)
+      .filter(({ score }) => score! <= 0.33)
+      .map(({ item }) => item)
+  }, [search, list.length])
+
   useEffect(() => {
     get()
+
+    window.addEventListener('keydown', onPaste)
+    return () => {
+      window.removeEventListener('keydown', onPaste)
+    }
   }, [])
   return (
     <>
@@ -144,7 +166,7 @@ const HomePage = () => {
         <title>Kidow Portal</title>
       </Head>
 
-      <div className="container max-w-screen-md mx-auto">
+      <div className="container mx-auto max-w-screen-md">
         <div className="py-10">
           <div className="flex items-center justify-between px-6">
             <img
@@ -161,7 +183,7 @@ const HomePage = () => {
                 onChange={onChange}
                 onKeyDown={onEnter}
                 autoFocus
-                className="bg-transparent border-b focus:outline-none"
+                className="border-b bg-transparent focus:outline-none"
               />
             )}
           </div>
@@ -170,37 +192,50 @@ const HomePage = () => {
         <div className="flex gap-2 px-6 pb-5">
           <input
             type="date"
-            className="p-2 bg-transparent border rounded border-neutral-600"
+            className="rounded border border-neutral-600 bg-transparent p-2"
             value={startDate}
             name="startDate"
             onChange={onChange}
           />
           <input
             type="date"
-            className="p-2 bg-transparent border rounded border-neutral-600"
+            className="rounded border border-neutral-600 bg-transparent p-2"
             value={endDate}
             name="endDate"
             onChange={onChange}
           />
           <button onClick={get}>
-            <SearchIcon className="w-5 h-5" />
+            <SearchIcon className="h-5 w-5" />
           </button>
         </div>
 
         <div className="px-6">
-          <input
-            type="url"
-            value={newUrl}
-            name="newUrl"
-            spellCheck={false}
-            readOnly
-            disabled={!isLoggedIn}
-            onPaste={onPaste}
-            className="w-full px-4 py-2 bg-transparent border rounded-full border-neutral-600"
-          />
+          <div
+            className={classnames(
+              'flex items-center gap-3 rounded-full border border-neutral-600 px-4 py-2',
+              { 'cursor-not-allowed': !isLoggedIn }
+            )}
+          >
+            <input
+              type="url"
+              value={search}
+              name="search"
+              onChange={onChange}
+              spellCheck={false}
+              disabled={!isLoggedIn}
+              className="flex-1 border-0 bg-transparent disabled:cursor-not-allowed"
+            />
+            {search.length > 1 && (
+              <XIcon
+                onClick={() => setState({ search: '' })}
+                className="h-4 w-4 cursor-pointer text-neutral-500 hover:text-neutral-400"
+              />
+            )}
+            <SearchIcon className="h-5 w-5 text-neutral-500" />
+          </div>
           {!!title && (
-            <div className="pb-6 my-6 border-b border-neutral-600">
-              <div className="flex items-center gap-4 p-4 border rounded-lg border-neutral-600">
+            <div className="my-6 border-b border-neutral-600 pb-6">
+              <div className="flex items-center gap-4 rounded-lg border border-neutral-600 p-4">
                 <img src={image} alt="" className="h-14 w-14" />
                 <div className="flex-1">
                   <div className="text-lg font-bold">
@@ -217,7 +252,7 @@ const HomePage = () => {
                     value={memo}
                     name="memo"
                     onChange={onChange}
-                    className="mt-1 text-sm bg-transparent border-b border-neutral-600"
+                    className="mt-1 border-b border-neutral-600 bg-transparent text-sm"
                     placeholder="메모"
                   />
                 </div>
@@ -226,16 +261,16 @@ const HomePage = () => {
                   onChange={(isPrivate) => setState({ isPrivate })}
                 />
                 <button disabled={isCreating} onClick={create}>
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="h-5 w-5" />
                 </button>
               </div>
             </div>
           )}
           <div className="mt-6 space-y-6">
-            {list.map((item) => (
+            {searchList.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-4 p-4 border rounded-lg border-neutral-600"
+                className="flex items-center gap-4 rounded-lg border border-neutral-600 p-4"
               >
                 <img src={item.image} alt="" className="h-14 w-14" />
                 <div className="flex-1">
@@ -260,7 +295,7 @@ const HomePage = () => {
                 </div>
                 {isLoggedIn && (
                   <button onClick={() => remove(item.id)}>
-                    <MinusIcon className="w-5 h-5" />
+                    <MinusIcon className="h-5 w-5" />
                   </button>
                 )}
               </div>

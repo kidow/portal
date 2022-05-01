@@ -17,10 +17,7 @@ export default class MyDocument extends Document {
           <meta charSet="utf-8" />
           <meta name="theme-color" content="#0065FF" />
           <meta name="robots" content="index, follow" />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          />
+          
           <meta
             name="keywords"
             content="link, vercel, nextjs, typescript, tailwindcss, references, portal"

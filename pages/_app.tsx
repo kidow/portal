@@ -3,6 +3,7 @@ import App from 'next/app'
 import { ErrorInfo } from 'react'
 import 'dayjs/locale/ko'
 import Script from 'next/script'
+import Head from 'next/head'
 
 interface Props {}
 interface State {
@@ -24,6 +25,12 @@ class MyApp extends App<Props, {}, State> {
     const { Component, pageProps } = this.props
     return (
       <>
+        <Head>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
+        </Head>
         <Script src="/gtm.js" strategy="afterInteractive" />
         <Component {...pageProps} />
       </>
