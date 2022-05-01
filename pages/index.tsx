@@ -12,7 +12,7 @@ import {
   SearchIcon,
   XIcon
 } from '@heroicons/react/outline'
-import { Switch } from 'components'
+import { Backdrop, Switch } from 'components'
 import dayjs from 'dayjs'
 import Fuse from 'fuse.js'
 import type { NextPage } from 'next'
@@ -32,6 +32,7 @@ interface State {
   endDate: string
   memo: string
   search: string
+  isLoading: boolean
 }
 
 const HomePage: NextPage = () => {
@@ -49,7 +50,8 @@ const HomePage: NextPage = () => {
       startDate,
       endDate,
       memo,
-      search
+      search,
+      isLoading
     },
     setState,
     onChange
@@ -66,7 +68,8 @@ const HomePage: NextPage = () => {
     startDate: '',
     endDate: '',
     memo: '',
-    search: ''
+    search: '',
+    isLoading: false
   })
 
   const get = async () => {
@@ -103,6 +106,7 @@ const HomePage: NextPage = () => {
 
   const onPaste = async (e: globalThis.KeyboardEvent) => {
     if (!isLoggedIn) return
+    setState({ isLoading: true })
     try {
       if (e.metaKey && e.key === 'v') {
         const url = await window.navigator.clipboard.readText()
@@ -123,11 +127,13 @@ const HomePage: NextPage = () => {
       }
     } catch (err) {
       console.log(err)
+    } finally {
+      setState({ isLoading: false })
     }
   }
 
   const onEnter = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || process.env.NEXT_PUBLIC_PASSWORD === password) {
+    if (e.key === 'Enter' && process.env.NEXT_PUBLIC_PASSWORD === password) {
       setState({ isLoggedIn: true })
     }
   }
@@ -154,12 +160,16 @@ const HomePage: NextPage = () => {
 
   useEffect(() => {
     get()
+  }, [])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
 
     window.addEventListener('keydown', onPaste)
     return () => {
       window.removeEventListener('keydown', onPaste)
     }
-  }, [])
+  }, [isLoggedIn])
   return (
     <>
       <Head>
@@ -322,6 +332,8 @@ const HomePage: NextPage = () => {
           </button>
         </a>
       </Link>
+
+      {isLoading && <Backdrop />}
     </>
   )
 }
