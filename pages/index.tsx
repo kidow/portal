@@ -132,7 +132,7 @@ const HomePage: NextPage = () => {
     }
   }
 
-  const onEnter = (e: KeyboardEvent<HTMLInputElement>) => {
+  const onLogin = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && process.env.NEXT_PUBLIC_PASSWORD === password) {
       setState({ isLoggedIn: true })
     }
@@ -191,7 +191,7 @@ const HomePage: NextPage = () => {
                 name="password"
                 type="password"
                 onChange={onChange}
-                onKeyDown={onEnter}
+                onKeyDown={onLogin}
                 autoFocus
                 className="border-b bg-transparent focus:outline-none"
               />
