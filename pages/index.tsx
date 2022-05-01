@@ -173,7 +173,7 @@ const HomePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Kidow Portal</title>
+        <title>Portal - Kidow</title>
       </Head>
 
       <div className="container mx-auto max-w-screen-md">
